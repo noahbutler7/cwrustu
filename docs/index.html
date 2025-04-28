@@ -267,7 +267,7 @@
       statusEl.textContent = 'Processing…';
       startProgressBar();
 
-      fetch('http://127.0.0.1:5000/upload', { method:'POST', body: form })
+      fetch('https://cwrustu-backend.onrender.com/upload', { method:'POST', body: form })
         .then(r => r.json())
         .then(() => {
           stopProgressBar();
