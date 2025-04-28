@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CWRUSTU</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Poppins:wght@300;400&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: radial-gradient(circle at top left, #0f0c29, #302b63, #24243e);
+      color: #eee;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lab {
+      position: relative;
+      width: 90%;
+      max-width: 700px;
+      padding: 2rem;
+      border-radius: 1.5rem;
+      background: rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 40px rgba(0, 255, 200, 0.4);
+      overflow: hidden;
+    }
+    .lab::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: conic-gradient(#00fff0, #ff00d0, #ffea00, #00fff0);
+      animation: spin 8s linear infinite;
+      opacity: 0.1;
+      z-index: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .lab > * { position: relative; z-index: 1; }
+
+    h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.2rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      letter-spacing: 0.05em;
+    }
+
+    #mp3Input { display: none; }
+    .upload-btn, .convert-btn {
+      display: block;
+      width: 100%;
+      max-width: 320px;
+      margin: 0.5rem auto;
+      padding: 0.8rem 1.8rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+    }
+    .upload-btn {
+      background: #00ffd5;
+      color: #0a0a0a;
+    }
+    .upload-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #00ffd5;
+    }
+    .convert-btn {
+      background: #ff4de1;
+      color: #111;
+      opacity: 0.5;
+    }
+    .convert-btn:enabled {
+      opacity: 1;
+    }
+    .convert-btn:enabled:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #ff4de1;
+    }
+
+    audio {
+      width: 100%;
+      margin: 1rem 0;
+      filter: drop-shadow(0 0 10px #00ffd5);
+    }
+
+    #progressContainer {
+      height: 0.8rem;
+      background: rgba(255,255,255,0.2);
+      border-radius: 1rem;
+      overflow: hidden;
+      display: block !important;      
+      margin-bottom: 1rem;
+      box-shadow: 0 0 8px rgba(0, 255, 208, 0.6);
+    }
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #00ffd5, #00a6ff);
+      transition: width 0.2s ease-out; 
+    }
+
+    #status {
+      text-align: center;
+      font-style: italic;
+      min-height: 1.2em;
+      margin-bottom: 1rem;
+    }
+
+    .switches {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    .switch {
+      font-size: 0.9rem;
+      user-select: none;
+    }
+    .switch input {
+      margin-right: 0.4rem;
+      accent-color: #00ffd5;
+      cursor: pointer;
+    }
+
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.6rem;
+    }
+    .key {
+      background: #111;
+      border: 2px solid rgba(0,255,208,0.6);
+      border-radius: 0.6rem;
+      padding: 1rem 0;
+      text-align: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: #00ffd5;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s, background 0.2s, color 0.2s;
+    }
+    .key:hover {
+      box-shadow: 0 0 20px rgba(0,255,208,0.8);
+    }
+    .key:active {
+      transform: scale(0.96);
+      box-shadow: 0 0 30px rgba(0,255,208,1);
+    }
+    .key::after {
+      content: '';
+      position: absolute;
+      width: 150%; height: 150%;
+      background: radial-gradient(circle, rgba(0,255,208,0.4), transparent 60%);
+      top: -75%; left: -75%;
+      transform: rotate(45deg);
+      transition: top 0.3s, left 0.3s;
+    }
+    .key:hover::after {
+      top: -25%; left: -25%;
+    }
+    .key.active {
+      background: rgba(0,255,208,0.9);
+      color: #111;
+      box-shadow: 0 0 30px rgba(0,255,208,1);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="lab">
+    <h1>CWRUSTU</h1>
+
+    <h1>Stem-to-MIDI Lab</h1>
+
+    <label for="mp3Input" class="upload-btn"> Upload MP3</label>
+    <input id="mp3Input" type="file" accept="audio/mp3" />
+
+    <button id="convertBtn" class="convert-btn" disabled> Convert File</button>
+
+    <audio id="audioPlayer" controls style="display:none;"></audio>
+
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+    </div>
+
+    <p id="status"></p>
+
+    <div class="switches">
+      <label class="switch">
+        <input class="keyboardToggle" type="checkbox" value="vocals" checked />
+        Vocals
+      </label>
+      <label class="switch">
+        <input class="keyboardToggle" type="checkbox" value="bass" checked />
+        Bass
+      </label>
+      <label class="switch">
+        <input class="keyboardToggle" type="checkbox" value="other" checked />
+        Melody
+      </label>
+      <label class="switch">
+        <input class="keyboardToggle" type="checkbox" value="drums" checked />
+        Drums
+      </label>
+    </div>
+
+    <div class="keyboard" id="keyboardDisplay">
+      <div class="key">C</div>
+      <div class="key">D</div>
+      <div class="key">E</div>
+      <div class="key">F</div>
+      <div class="key">G</div>
+      <div class="key">A</div>
+      <div class="key">B</div>
+    </div>
+  </div>
+
+  <script>
+    const mp3Input   = document.getElementById('mp3Input');
+    const convertBtn = document.getElementById('convertBtn');
+    const statusEl   = document.getElementById('status');
+    let uploadedFile = null, progressInterval;
+    const activeKeyboards = new Set(['vocals','bass','other','drums']);
+    const audioBuffers    = {};
+
+    mp3Input.addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file && file.type === 'audio/mpeg') {
+        uploadedFile = file;
+        const ap = document.getElementById('audioPlayer');
+        ap.src = URL.createObjectURL(file);
+        ap.style.display = 'block';
+        convertBtn.disabled = false;
+        statusEl.textContent = '';
+      } else {
+        uploadedFile = null;
+        convertBtn.disabled = true;
+        statusEl.textContent = '❌ Not a valid MP3.';
+      }
+    });
+
+    convertBtn.addEventListener('click', () => {
+      if (!uploadedFile) {
+        statusEl.textContent = 'Please choose an MP3 first.';
+        return;
+      }
+      uploadFile();
+    });
+
+    function uploadFile() {
+      const form = new FormData();
+      form.append('file', uploadedFile);
+      statusEl.textContent = 'Processing…';
+      startProgressBar();
+
+      fetch('http://127.0.0.1:5000/upload', { method:'POST', body: form })
+        .then(r => r.json())
+        .then(() => {
+          stopProgressBar();
+          preloadAudioFiles();
+          statusEl.textContent = ' Conversion complete! Press 1–7 to play.';
+        })
+        .catch(() => {
+          stopProgressBar();
+          statusEl.textContent = ' Error processing file.';
+        });
+    }
+
+    function startProgressBar() {
+      const bar = document.getElementById('progressBar');
+      bar.style.width = '0%';         
+      clearInterval(progressInterval);
+
+      let p = 0;
+      progressInterval = setInterval(() => {
+        p = Math.min(p + Math.random() * 3, 95);
+        bar.style.width = p + '%';
+      }, 200);
+    }
+
+    function stopProgressBar() {
+      clearInterval(progressInterval);
+      document.getElementById('progressBar').style.width = '100%';
+    }
+
+    function preloadAudioFiles() {
+      ['vocals','bass','other','drums'].forEach(stem => {
+        audioBuffers[stem] = {};
+        ['A','B','C','D','E','F','G'].forEach(note => {
+          audioBuffers[stem][note] =
+            new Audio(`/outputs/${stem}/${note}.wav`);
+        });
+      });
+    }
+
+    document.querySelectorAll('.keyboardToggle').forEach(toggle => {
+      toggle.addEventListener('change', () => {
+        toggle.checked
+          ? activeKeyboards.add(toggle.value)
+          : activeKeyboards.delete(toggle.value);
+      });
+    });
+
+    document.addEventListener('keydown', e => {
+      const map = ['1','2','3','4','5','6','7'];
+      if (!map.includes(e.key)) return;
+      const idx = map.indexOf(e.key),
+            note = ['A','B','C','D','E','F','G'][idx];
+
+      activeKeyboards.forEach(stem => {
+        const a = audioBuffers[stem][note];
+        if (a) { a.currentTime = 0; a.play(); }
+      });
+
+      const keyEl = document.querySelectorAll('.key')[idx];
+      if (keyEl) {
+        keyEl.classList.add('active');
+        setTimeout(() => keyEl.classList.remove('active'), 150);
+      }
+    });
+
+    window.onload = preloadAudioFiles;
+  </script>
+</body>
+</html>
